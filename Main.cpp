@@ -34,36 +34,37 @@ Params parse_params(int argc, char ** argv) {
 	if (argc < 3) {
 		retval.good_params = false;
 	}
-
-	/*
-	Must specify both the min and the max.
-	*/
-	if (argc == 4) {
-		retval.good_params = false;
-	}
-
 	else {
-		retval.good_params = true;
 
-		if (argc > 6) {
-			argc = 6;
+		/*
+		Must specify both the min and the max.
+		*/
+		if (argc == 4) {
+			retval.good_params = false;
 		}
+		else {
+			retval.good_params = true;
 
-		std::stringstream paramParser;
-		for (int i = argc-1; i >= 1; i--) {
-			paramParser << argv[i] << " ";
-		}
+			if (argc > 6) {
+				argc = 6;
+			}
 
-		switch (argc) {
-		case 6:
-			paramParser >> retval.seed;
-		case 5:
-			paramParser >> retval.uniform_dist_max_exclusive;
-			paramParser >> retval.uniform_dist_min_inclusive;
-		case 3:
-			paramParser >> retval.file_loc;
-			paramParser >> retval.entity_count;
-			break;
+			std::stringstream paramParser;
+			for (int i = argc - 1; i >= 1; i--) {
+				paramParser << argv[i] << " ";
+			}
+
+			switch (argc) {
+			case 6:
+				paramParser >> retval.seed;
+			case 5:
+				paramParser >> retval.uniform_dist_max_exclusive;
+				paramParser >> retval.uniform_dist_min_inclusive;
+			case 3:
+				paramParser >> retval.file_loc;
+				paramParser >> retval.entity_count;
+				break;
+			}
 		}
 	}
 
@@ -100,9 +101,6 @@ int main(int argc, char ** argv) {
 		std::cerr << "Bad params" << std::endl;
 		exitCode = -1;
 	}
-
-	char buff[2];
-	std::cin.read(buff, 1);
 
 	return exitCode;
 }
