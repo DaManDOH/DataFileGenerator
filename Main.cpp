@@ -28,7 +28,7 @@ struct Params {
 	long long int seed = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 };
 
-Params parse_params(int argc, char ** argv) {
+Params parse_command_line_args(int argc, char ** argv) {
 	Params retval;
 
 	if (argc < 3) {
@@ -74,7 +74,7 @@ Params parse_params(int argc, char ** argv) {
 int main(int argc, char ** argv) {
 	int exitCode = 0;
 
-	auto userParams = parse_params(argc, argv);
+	auto userParams = parse_command_line_args(argc, argv);
 
 	if (userParams.good_params) {
 		std::cout << "Good params" << std::endl;
