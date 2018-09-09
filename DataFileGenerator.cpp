@@ -1,5 +1,6 @@
-// main.cpp
+// DataFileGenerator.cpp
 
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <functional>
@@ -17,8 +18,7 @@ enum OutputFormat {
 	USE_LONG
 };
 
-std::map<std::string, OutputFormat> g_oStringToOutputFormatMap =
-{
+std::map<std::string, OutputFormat> g_oStringToOutputFormatMap = {
 	{"", USE_DOUBLE},
 	{"byte", USE_CHAR},
 	{"char", USE_CHAR},
@@ -91,11 +91,14 @@ Params parse_command_line_args(int argc, char ** argv) {
 			switch (argc) {
 			case 7:
 				paramParser >> retval.seed;
+                [[fallthrough]];
 			case 6:
 				paramParser >> retval.number_format;
+                [[fallthrough]];
 			case 5:
 				paramParser >> retval.uniform_dist_max_exclusive;
 				paramParser >> retval.uniform_dist_min_inclusive;
+                [[fallthrough]];
 			case 3:
 				paramParser >> retval.file_loc;
 				paramParser >> retval.entity_count;
