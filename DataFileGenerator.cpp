@@ -4,9 +4,31 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <random>
 #include <sstream>
 #include <string>
+
+enum OutputFormat {
+	USE_DOUBLE, // default
+	USE_CHAR,
+	USE_FLOAT,
+	USE_INT,
+	USE_LONG
+};
+
+std::map<std::string, OutputFormat> g_oStringToOutputFormatMap =
+{
+	{"", USE_DOUBLE},
+	{"byte", USE_CHAR},
+	{"char", USE_CHAR},
+	{"character", USE_CHAR},
+	{"double", USE_DOUBLE},
+	{"float", USE_FLOAT},
+	{"int", USE_INT},
+	{"integer", USE_INT},
+	{"long", USE_LONG}
+};
 
 struct Params {
 	// Good params flag
@@ -25,8 +47,20 @@ struct Params {
 	double uniform_dist_max_exclusive = 1000.0;
 
 	// Fifth param (optional)
+	OutputFormat number_format = USE_DOUBLE;
+
+	// Sixth param (optional)
 	long long int seed = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 };
+
+std::istream & operator>>(std::istream & in, OutputFormat & rhs) {
+	std::string outputFormatString;
+	in >> outputFormatString;
+	std::transform(outputFormatString.begin(), outputFormatString.end(), outputFormatString.begin(), ::tolower);
+	OutputFormat check = g_oStringToOutputFormatMap[outputFormatString];
+	rhs = check;
+	return in;
+}
 
 Params parse_command_line_args(int argc, char ** argv) {
 	Params retval;
@@ -45,8 +79,8 @@ Params parse_command_line_args(int argc, char ** argv) {
 		else {
 			retval.good_params = true;
 
-			if (argc > 6) {
-				argc = 6;
+			if (argc > 7) {
+				argc = 7;
 			}
 
 			std::stringstream paramParser;
@@ -55,8 +89,10 @@ Params parse_command_line_args(int argc, char ** argv) {
 			}
 
 			switch (argc) {
-			case 6:
+			case 7:
 				paramParser >> retval.seed;
+			case 6:
+				paramParser >> retval.number_format;
 			case 5:
 				paramParser >> retval.uniform_dist_max_exclusive;
 				paramParser >> retval.uniform_dist_min_inclusive;
@@ -85,11 +121,31 @@ int main(int argc, char ** argv) {
 
 		std::ofstream result_file(userParams.file_loc, std::ios::binary);
 
-		long long int writeCount = 0ll;
+		size_t writeCount = (size_t)0;
 		double randReal;
 		for (long long int i = 0; i < userParams.entity_count; i++) {
 			randReal = generate();
-			result_file.write((char *)&randReal, 8);
+			switch (userParams.number_format) {
+			case USE_CHAR: {
+				char cast = (char)randReal;
+				result_file.write((char *)&cast, sizeof(char));
+				break;
+			}
+			case USE_FLOAT: {
+				float cast = (float)randReal;
+				result_file.write((char *)&cast, sizeof(float));
+				break;
+			}
+			case USE_INT: {
+				int cast = (int)randReal;
+				result_file.write((char *)&cast, sizeof(int));
+				break;
+			}
+			default: {
+				result_file.write((char *)&randReal, sizeof(double));
+				break;
+			}
+			}
 			writeCount++;
 		}
 
