@@ -75,15 +75,19 @@ struct Params {
 
 
 std::istream& operator>>(std::istream& in, OutputFormat& rhs) {
-	std::string outputFormatString;
+	using namespace std;
+
+	string outputFormatString;
 	in >> outputFormatString;
-	std::transform(outputFormatString.begin(), outputFormatString.end(), outputFormatString.begin(), ::tolower);
+	transform(outputFormatString.begin(), outputFormatString.end(), outputFormatString.begin(), ::tolower);
 	rhs = g_oStringToOutputFormatMap[outputFormatString];
 	return in;
 }
 
 
 Params parse_command_line_args(int argc, const char* const argv[]) {
+	using namespace std;
+
 	Params retval;
 
 	/*
@@ -110,29 +114,29 @@ Params parse_command_line_args(int argc, const char* const argv[]) {
 
 	switch (argc) {
 	case 7: {
-		std::stringstream paramParser;
+		stringstream paramParser;
 		paramParser << argv[6];
 		paramParser >> retval.seed;
 	}
 		  [[fallthrough]];
 	case 6: {
-		std::stringstream paramParser;
+		stringstream paramParser;
 		paramParser << argv[5];
 		paramParser >> retval.number_format;
 	}
 		  [[fallthrough]];
 	case 5: {
-		std::stringstream paramParser;
+		stringstream paramParser;
 		paramParser << argv[4] << " " << argv[3];
 		paramParser >> retval.uniform_dist_max_exclusive;
 		paramParser >> retval.uniform_dist_min_inclusive;
 	}
 		  [[fallthrough]];
 	case 3: {
-		std::stringstream paramParser;
+		stringstream paramParser;
 		paramParser << argv[2];
 		paramParser >> retval.entity_count;
-		retval.file_loc = std::make_unique<std::string>(argv[1]);
+		retval.file_loc = make_unique<string>(argv[1]);
 
 		break;
 	}
@@ -167,7 +171,7 @@ int main(int argc, const char* const argv[]) {
 	auto userParams = parse_command_line_args(argc, argv);
 
 	if (userParams.bad_params) {
-		std::cerr << "Bad params" << std::endl;
+		cerr << "Bad params" << endl;
 		display_usage_message(argv[0]);
 		return -1;
 	}
@@ -176,7 +180,7 @@ int main(int argc, const char* const argv[]) {
 	ofstream result_file(*userParams.file_loc, ios::binary);
 
 	if (!result_file.is_open()) {
-		std::cerr << "Could not open file \"" << *userParams.file_loc << "\"" << std::endl;
+		cerr << "Could not open file \"" << *userParams.file_loc << "\"" << endl;
 		return -2;
 	}
 
