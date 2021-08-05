@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2003
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DataFileGenerator", "DataFileGenerator.vcxproj", "{DC62B376-7E05-4F2D-A37D-9E0771243E4E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DataFileGenerator", "DataFileGenerator.vcxproj", "{205076D0-80FE-43E2-90C2-282AB8336A98}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DC62B376-7E05-4F2D-A37D-9E0771243E4E}.Debug|x64.ActiveCfg = Debug|x64
-		{DC62B376-7E05-4F2D-A37D-9E0771243E4E}.Debug|x64.Build.0 = Debug|x64
-		{DC62B376-7E05-4F2D-A37D-9E0771243E4E}.Release|x64.ActiveCfg = Release|x64
-		{DC62B376-7E05-4F2D-A37D-9E0771243E4E}.Release|x64.Build.0 = Release|x64
+		{205076D0-80FE-43E2-90C2-282AB8336A98}.Debug|x64.ActiveCfg = Debug|x64
+		{205076D0-80FE-43E2-90C2-282AB8336A98}.Debug|x64.Build.0 = Debug|x64
+		{205076D0-80FE-43E2-90C2-282AB8336A98}.Release|x64.ActiveCfg = Release|x64
+		{205076D0-80FE-43E2-90C2-282AB8336A98}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {EBE93150-1CDB-433D-8923-AB2FE3C35802}
+		SolutionGuid = {61B07319-22B3-44EE-8286-20F0C8B0DA1C}
 	EndGlobalSection
 EndGlobal

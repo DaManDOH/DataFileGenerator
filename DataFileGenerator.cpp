@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <random>
 #include <sstream>
 #include <string>
@@ -27,7 +28,7 @@ Defaults:\n\
 \tData format: double\n";
 
 
-enum OutputFormat {
+enum class OutputFormat {
 	USE_DOUBLE, // default
 	USE_CHAR,
 	USE_FLOAT,
@@ -37,27 +38,27 @@ enum OutputFormat {
 
 
 std::map<std::string, OutputFormat> g_oStringToOutputFormatMap = {
-	{"", USE_DOUBLE},
-	{"byte", USE_CHAR},
-	{"char", USE_CHAR},
-	{"character", USE_CHAR},
-	{"double", USE_DOUBLE},
-	{"float", USE_FLOAT},
-	{"int", USE_INT},
-	{"integer", USE_INT},
-	{"long", USE_LONG}
+	{"", OutputFormat::USE_DOUBLE},
+	{"byte", OutputFormat::USE_CHAR},
+	{"char", OutputFormat::USE_CHAR},
+	{"character", OutputFormat::USE_CHAR},
+	{"double", OutputFormat::USE_DOUBLE},
+	{"float", OutputFormat::USE_FLOAT},
+	{"int", OutputFormat::USE_INT},
+	{"integer", OutputFormat::USE_INT},
+	{"long", OutputFormat::USE_LONG}
 };
 
 
 struct Params {
-	// Good params flag
-	bool good_params;
+	// Parameter sentinel
+	bool bad_params = true;
 
 	// First param
-	long long entity_count;
+	long long int entity_count = -1;
 
 	// Second param
-	std::string file_loc;
+	std::unique_ptr<std::string> file_loc;
 
 	// Third param (optional)
 	double uniform_dist_min_inclusive = 100.0;
@@ -66,78 +67,90 @@ struct Params {
 	double uniform_dist_max_exclusive = 1000.0;
 
 	// Fifth param (optional)
-	OutputFormat number_format = USE_DOUBLE;
+	OutputFormat number_format = OutputFormat::USE_DOUBLE;
 
 	// Sixth param (optional)
-	long long seed = std::chrono::duration_cast<std::chrono::nanoseconds>(
-		std::chrono::system_clock::now().time_since_epoch()).count();
+	long long seed = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 };
 
 
-std::istream & operator>>(std::istream & in, OutputFormat & rhs) {
-	std::string outputFormatString;
+std::istream& operator>>(std::istream& in, OutputFormat& rhs) {
+	using namespace std;
+
+	string outputFormatString;
 	in >> outputFormatString;
-	std::transform(outputFormatString.begin(), outputFormatString.end(), outputFormatString.begin(), ::tolower);
-	OutputFormat check = g_oStringToOutputFormatMap[outputFormatString];
-	rhs = check;
+	transform(outputFormatString.begin(), outputFormatString.end(), outputFormatString.begin(), ::tolower);
+	rhs = g_oStringToOutputFormatMap[outputFormatString];
 	return in;
 }
 
 
-Params parse_command_line_args(int argc, char* argv[]) {
+Params parse_command_line_args(int argc, const char* const argv[]) {
+	using namespace std;
+
 	Params retval;
 
+	/*
+	 * Must specify # of elements and destination file.
+	 */
 	if (argc < 3) {
-		retval.good_params = false;
+		retval.bad_params = true;
+		return retval;
 	}
-	else {
 
-		/*
-		When distribution min is specified, distribution max must also be specified.
-		*/
-		if (argc == 4) {
-			retval.good_params = false;
-		}
-		else {
-			retval.good_params = true;
+	/*
+	 * When lower bound of range is specified, both min and max are required.
+	 */
+	if (argc == 4) {
+		retval.bad_params = true;
+		return retval;
+	}
 
-			if (argc > 7) {
-				argc = 7;
-			}
+	retval.bad_params = false;
 
-			std::stringstream paramParser;
-			for (auto i = argc - 1; i >= 1; --i) {
-				paramParser << argv[i] << " ";
-			}
+	if (argc > 7) {
+		argc = 7;
+	}
 
-			switch (argc) {
-			case 7:
-				paramParser >> retval.seed;
-				[[fallthrough]];
-			case 6:
-				paramParser >> retval.number_format;
-				[[fallthrough]];
-			case 5:
-				paramParser >> retval.uniform_dist_max_exclusive;
-				paramParser >> retval.uniform_dist_min_inclusive;
-				[[fallthrough]];
-			case 3:
-				paramParser >> retval.file_loc;
-				paramParser >> retval.entity_count;
-				break;
-			}
-		}
+	switch (argc) {
+	case 7: {
+		stringstream paramParser;
+		paramParser << argv[6];
+		paramParser >> retval.seed;
+	}
+		  [[fallthrough]];
+	case 6: {
+		stringstream paramParser;
+		paramParser << argv[5];
+		paramParser >> retval.number_format;
+	}
+		  [[fallthrough]];
+	case 5: {
+		stringstream paramParser;
+		paramParser << argv[4] << " " << argv[3];
+		paramParser >> retval.uniform_dist_max_exclusive;
+		paramParser >> retval.uniform_dist_min_inclusive;
+	}
+		  [[fallthrough]];
+	case 3: {
+		stringstream paramParser;
+		paramParser << argv[2];
+		paramParser >> retval.entity_count;
+		retval.file_loc = make_unique<string>(argv[1]);
+
+		break;
+	}
 	}
 
 	return retval;
 }
 
 
-auto instantiate_generator(const Params &userParams) {
+auto instantiate_generator(Params const& userParams) {
 	using namespace std;
 
 	mt19937_64 oRNG(userParams.seed);
-	uniform_real_distribution<> oDist(
+	uniform_real_distribution oDist(
 		userParams.uniform_dist_min_inclusive,
 		userParams.uniform_dist_max_exclusive);
 	return bind(oDist, oRNG);
@@ -152,55 +165,58 @@ void display_usage_message(const char program_name[]) {
 }
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* const argv[]) {
 	using namespace std;
-
-	int exitCode = 0;
 
 	auto userParams = parse_command_line_args(argc, argv);
 
-	if (userParams.good_params) {
-		auto generate = instantiate_generator(userParams);
-		ofstream result_file(userParams.file_loc, ios::binary);
-		size_t writeCount = 0;
-
-		double randReal;
-		for (long long i = 0; i < userParams.entity_count; ++i) {
-			randReal = generate();
-			switch (userParams.number_format) {
-			case USE_CHAR: {
-				result_file.write((char *)&randReal, sizeof(char));
-				break;
-			}
-			case USE_FLOAT: {
-				result_file.write((char *)&randReal, sizeof(float));
-				break;
-			}
-			case USE_INT: {
-				result_file.write((char *)&randReal, sizeof(int));
-				break;
-			}
-			case USE_LONG: {
-				result_file.write((char *)&randReal, sizeof(long long));
-				break;
-			}
-			default: {
-				result_file.write((char *)&randReal, sizeof(double));
-				break;
-			}
-			}
-			++writeCount;
-		}
-
-		result_file.close();
-
-		cout << "File " << userParams.file_loc << " written\n\twith " << writeCount << " elements." << endl;
-	}
-	else {
+	if (userParams.bad_params) {
 		cerr << "Bad params" << endl;
 		display_usage_message(argv[0]);
-		exitCode = -1;
+		return -1;
 	}
 
-	return exitCode;
+	auto generate = instantiate_generator(userParams);
+	ofstream result_file(*userParams.file_loc, ios::binary);
+
+	if (!result_file.is_open()) {
+		cerr << "Could not open file \"" << *userParams.file_loc << "\"" << endl;
+		return -2;
+	}
+
+	size_t writeCount = 0;
+
+	double randReal;
+	for (long long i = 0; i < userParams.entity_count; ++i) {
+		randReal = generate();
+		switch (userParams.number_format) {
+		case OutputFormat::USE_CHAR: {
+			result_file.write((char*)&randReal, sizeof(char));
+			break;
+		}
+		case OutputFormat::USE_FLOAT: {
+			result_file.write((char*)&randReal, sizeof(float));
+			break;
+		}
+		case OutputFormat::USE_INT: {
+			result_file.write((char*)&randReal, sizeof(int));
+			break;
+		}
+		case OutputFormat::USE_LONG: {
+			result_file.write((char*)&randReal, sizeof(long long));
+			break;
+		}
+		default: {
+			result_file.write((char*)&randReal, sizeof(double));
+			break;
+		}
+		}
+		++writeCount;
+	}
+
+	result_file.close();
+
+	cout << "File \"" << *userParams.file_loc << "\" written\n\twith " << writeCount << " elements." << endl;
+
+	return 0;
 }
